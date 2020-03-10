@@ -11,13 +11,13 @@ const int colorB = 255;
 #define lenta1 5
 #define lenta2 3
 #define magnet 11
-#define ventilator 12
+#define ventilator 13 //era pe 12
 
 
 int spLenta1=0;
 int spLenta2=0;
-int sMagnet=0;
-int sVentilator=0;
+bool sMagnet= false;
+bool sVentilator= true;
 
 char inc;
 int value;
@@ -73,11 +73,20 @@ while (Serial.available())
         spLenta2=value;
         break;
       case 'C':
-        //Serial.print("Case B got ");
-        sVentilator=value;
+        //Serial.print("Case C got ");
+        //Serial.println(value);
+        if(value==1)
+        {
+          sVentilator= true;
+        }
+        else
+        {
+           sVentilator= false;
+        }
+        
         break;
       case 'D':
-        //Serial.print("Case B got ");
+        //Serial.print("Case D got ");
         sMagnet=value;
         break;
         
@@ -85,8 +94,7 @@ while (Serial.available())
        ;
       }
       
- 
-      val = 0;  
+      value = 0;  
     }
   }
 
@@ -99,7 +107,8 @@ while (Serial.available())
 lcd.setRGB(colorR, colorG, colorB);
 lcd.setCursor(0, 0);
 lcd.print("Detectare deseu");
-  
+
+Serial.println(sVentilator);
 delay(1000);
 myservo.write(95);      
 myservo1.write(90); 
@@ -107,7 +116,11 @@ analogWrite(lenta1, spLenta1);
 analogWrite(lenta2, spLenta2);
 val= analogRead(A0);
 
+digitalWrite(ventilator, sVentilator);
+digitalWrite(magnet, sMagnet);
+delay(1000);
 
+/*
 if(val<prag)
 {
     lcd.setCursor(0, 1);
@@ -155,9 +168,8 @@ delay(1000);
 
 
 }
-    digitalWrite(ventilator, sVentilator);
-    digitalWrite(magnet, sMagnet);
-
+*/
+    
 
   
 }
