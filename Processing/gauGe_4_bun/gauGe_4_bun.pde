@@ -1,6 +1,32 @@
 
 import controlP5.*;
+import java.awt.Frame;
+import java.awt.BorderLayout;
+import processing.serial.*;
+
+/* SETTINGS BEGIN */
+byte[] inBuffer = new byte[100]; // holds serial message
+int i = 0; // loop variable
+// Serial port to connect to
+String serialPortName = "COM5";
+
+// If you want to debug the plotter without using a real serial port set this to true
+boolean mockupSerial = false;
+
+/* SETTINGS END */
+Serial serialPort; // Serial port object
 ControlP5 cp5;
+
+// plots
+
+Graph LineGraph = new Graph(1125, 300, 600, 300, color (20, 20, 200));
+
+float[][] lineGraphValues = new float[6][100];
+float[] lineGraphSampleNumbers = new float[100];
+color[] graphColors = new color[1];
+
+// helper for saving the executing path
+String topSketchPath = "";
 
 int col = color(255);
 int myColor = color(0,0,0);
@@ -17,13 +43,37 @@ Meter n;
  ////////////////////
 
 void setup() {
- 
+ cp5 = new ControlP5(this);
   size(1800, 900);
   noStroke();
    ///////////////////////////// 
-  cp5 = new ControlP5(this);
-  cp5.addSlider("BANDA1").setPosition(180,350).setRange(0,255).setSize(250, 30) ;
-  cp5.addSlider("BANDA2").setPosition(180,750).setRange(0,255).setSize(250, 30) ;
+   graphColors[0] = color(131, 255, 20);
+  
+
+  // settings save file
+  topSketchPath = sketchPath();
+  // init charts
+  setChartSettings();
+  // build x axis values for the line graph
+  for (int i=0; i<lineGraphValues.length; i++) {
+    for (int k=0; k<lineGraphValues[0].length; k++) {
+      lineGraphValues[i][k] = 0;
+      if (i==0)
+        lineGraphSampleNumbers[k] = k;
+    }
+  }
+  
+  // start serial communication
+  if (!mockupSerial) {
+    //String serialPortName = Serial.list()[3];
+    serialPort = new Serial(this, serialPortName, 115200);
+  }
+  else
+    serialPort = null;
+  /////////////////////////////
+  
+  cp5.addSlider("BANDA1").setPosition(180,360).setRange(0,255).setSize(250, 30) ;
+  cp5.addSlider("BANDA2").setPosition(180,760).setRange(0,255).setSize(250, 30) ;
   //////////////////////////
 
   m = new Meter(this, 70, 55, false); // full circle - true, 1/2 circle - false  
@@ -87,20 +137,69 @@ cp5.addToggle("toggle1")
 }
 
 void draw() {
-  m.updateMeter(BANDA1);
+  
+  /////VOID DRAW PLOTTER////
+  if (mockupSerial || serialPort.available() > 0) {
+    String myString = "";
+    if (!mockupSerial) {
+      try {
+        serialPort.readBytesUntil('\r', inBuffer);
+      }
+      catch (Exception e) {
+      }
+      myString = new String(inBuffer);
+    }
+    else {
+      myString = mockupSerialFunction();
+    }
+
+    //println(myString);
+
+    // split the string at delimiter (space)
+    String[] nums = split(myString, ' ');
+   
+   
+    
+
+      
+
+      // update line graph
+      
+        if (i<lineGraphValues.length) {
+          for (int k=0; k<lineGraphValues[i].length-1; k++) {
+            lineGraphValues[i][k] = lineGraphValues[i][k+1];
+          }
+
+          lineGraphValues[i][lineGraphValues[i].length-1] = float(nums[i]);
+        }
+      
+      
+     
+    
+  }
+
+  
+
+  // draw the line graphs
+  LineGraph.DrawAxis();
+  
+    LineGraph.GraphColor = graphColors[0];
+    
+      LineGraph.LineGraph(lineGraphSampleNumbers, lineGraphValues[0]);
+ /////////////////////////VOID DRAW PLOTTER FINISH/////////
+m.updateMeter(BANDA1);
   n.updateMeter(BANDA2);
   pushMatrix();
-  textOFF(620,121);  
-  textON(820,120);
+  textOFF(680,121);  
+  textON(870,120);
   //////////////////////
-  textOFF(620,262); 
-  textON(820,262);
-  ventilatorul(640,75);
-  electromagnet(620,220);
-  brat1(620,460);
-  brat2(820,460);
-  
-  popMatrix();
+  textOFF(680,262); 
+  textON(870,262);
+  ventilatorul(860,75);
+  electromagnet(880,220);
+  brat1(700,460);
+  brat2(900,460);
+    popMatrix();
   
 
   
@@ -121,23 +220,23 @@ void textON(int a, int b){
 }
 
 void ventilatorul(int a, int b){
-  textSize(40);
+  textSize(35);
   text("Ventilatorul", a, b); 
   fill(0, 102, 153);
 }
 void electromagnet(int a, int b){
-  textSize(40);
+  textSize(35);
   text("Electromagnet", a, b); 
   fill(0, 102, 153);
 }
 
 void brat1(int a, int b){
-  textSize(40);
+  textSize(35);
   text("Brat1", a, b); 
   fill(0, 102, 153);
 }
 void brat2(int a, int b){
-  textSize(40);
+  textSize(35);
   text("Brat2", a, b); 
   fill(0, 102, 153);
 }
@@ -164,3 +263,13 @@ void slider1(int slider1) {
 void slider2(int slider2) {
     println("Slider2: "+slider2);
   }  
+void setChartSettings() {
+  LineGraph.xLabel=" Samples ";
+  LineGraph.yLabel="Value";
+  LineGraph.Title="";  
+  LineGraph.xDiv=20;  
+  LineGraph.xMax=100; 
+  LineGraph.xMin=0;  
+  LineGraph.yMax=1024; 
+  LineGraph.yMin=0;
+}

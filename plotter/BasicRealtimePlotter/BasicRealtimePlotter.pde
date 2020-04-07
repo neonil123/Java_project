@@ -23,7 +23,7 @@ ControlP5 cp5;
 
 // plots
 
-Graph LineGraph = new Graph(225, 350, 600, 200, color (20, 20, 200));
+Graph LineGraph = new Graph(125, 150, 600, 200, color (20, 20, 200));
 
 float[][] lineGraphValues = new float[6][100];
 float[] lineGraphSampleNumbers = new float[100];
@@ -33,8 +33,9 @@ color[] graphColors = new color[1];
 String topSketchPath = "";
 
 void setup() {
+  
   frame.setTitle("Realtime plotter");
-  size(890, 620);
+  size(1890, 1620);
 
   // set line graph colors
   graphColors[0] = color(131, 255, 20);
@@ -66,9 +67,8 @@ void setup() {
   else
     serialPort = null;
 
-  // build the gui
-  int x = 170;
-  int y = 60;
+
+  
 
  
 
